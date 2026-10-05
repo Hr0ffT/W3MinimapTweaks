@@ -1,0 +1,50 @@
+# W3MinimapTweaks
+
+Minimap tweaks for **Warcraft III 1.26a and 1.27b**.
+
+[Русская версия](README.ru.md)
+
+- **Ally Color Mode in campaign missions.** The button next to the minimap (or **Alt+A**) switches the colours to "you, allies, enemies": you blue, allies teal, enemies red, on the minimap and then on the units too. It works in every game except campaign missions, where the game greys it out. With this mod it works there as well.
+
+Everything happens in memory while the game runs: the mod keeps the game from disabling the button. No game files are modified.
+
+## Requirements
+
+- Warcraft III 1.26a (Game.dll 1.26.0.6401) or 1.27b (Game.dll 1.27.1.7085). The mod checks the version and does nothing on any other patch.
+
+## Installation
+
+1. Copy `W3MinimapTweaks.mix` and `W3MinimapTweaks.ini` into the Warcraft III folder, next to `war3.exe`.
+2. Start the game. The `.mix` is loaded automatically, no launcher needed.
+
+Works alongside other `.mix` mods, for example [W3TrueWidescreen](https://github.com/Hr0ffT/W3TrueWidescreen) and [W3MultislotQuickSave](https://github.com/Hr0ffT/W3MultislotQuickSave).
+
+To uninstall, delete `W3MinimapTweaks.mix` and `W3MinimapTweaks.ini`.
+
+## Settings
+
+All in `W3MinimapTweaks.ini`:
+
+| Setting | Default | What it does |
+|---|---|---|
+| `CampaignAllyColors` | 1 | 1 = the Ally Color Mode button works in campaign missions too |
+| `Debug` | 0 | 1 = write `W3MinimapTweaks.log` next to the game (for bug reports) |
+
+## Notes
+
+- Blizzard never used this mode in the campaign, so a mission that recolours the player by script can show odd colours in it (for example, a mission where you play purple).
+- The creep camp button next to it is greyed out in campaign missions too, but it is left as is: the game builds no creep camp marks there, so it would show nothing.
+
+## Changelog
+
+- **1.0** — First release.
+
+## Building from source
+
+```
+i686-w64-mingw32-gcc -O2 -Wall -shared -static-libgcc -s -o W3MinimapTweaks.mix src/W3MinimapTweaks.c -lversion
+```
+
+## License
+
+MIT, see [LICENSE](LICENSE).
