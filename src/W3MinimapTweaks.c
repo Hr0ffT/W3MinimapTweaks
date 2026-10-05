@@ -3,6 +3,7 @@
 //
 // - Ally Color Mode (Alt+A) usable in campaign missions.
 // - Smaller unit dots on the minimap, so groups of units do not melt into one blob on big screens.
+// - Own minimap colours for Ally Color Mode (you, allies, enemies, creeps).
 // Build: i686-w64-mingw32-gcc -O2 -Wall -shared -static-libgcc -s -o W3MinimapTweaks.mix W3MinimapTweaks.c -lversion
 //
 // In campaign missions the game greys out the Ally Color Mode button next to the minimap (Alt+A: own units blue,
@@ -14,6 +15,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 
 typedef uint32_t u32;
 static u32 g_base;
@@ -78,6 +80,45 @@ static void KeepEnabled(u32 push, const char* what)
     logf_("%s: stays enabled in campaign missions", what);
 }
 
+// ---- Ally Color Mode colours on the minimap. The minimap takes them from the game data ([FogOfWar] FogColorPlayer,
+//      FogColorAlly, FogColorEnemy, FogColorCreepAllied / FogColorCreepNormal: you white, allies teal, enemies red)
+//      into its own fields when it is created, and builds its per-player colours from them at each update. They are
+//      set from the ini when the minimap draws its unit dots (so from its second update on). The units themselves
+//      keep their team colours. ----
+static const struct { const char* name; u32 rgb; } kNamedColors[] = {
+    { "white", 0xFFFFFF }, { "red", 0xFF0000 }, { "green", 0x00FF00 }, { "blue", 0x0040FF }, { "yellow", 0xFFFF00 },
+    { "orange", 0xFF8000 }, { "teal", 0x00FFD2 }, { "cyan", 0x00FFFF }, { "purple", 0xA000FF }, { "pink", 0xFF60C0 },
+    { "magenta", 0xFF00FF }, { "black", 0x000000 }, { "gray", 0x808080 }, { "grey", 0x808080 } };
+static const char* const kColorKeys[4] = { "MinimapYouColor", "MinimapAllyColor", "MinimapEnemyColor", "MinimapCreepColor" };
+static u32 g_mmColor[4]; static int g_mmSet[4], g_mmAny;
+static int ParseRGB(const char* v, u32* out)
+{
+    while (*v == ' ') v++;
+    if (!*v) return 0;
+    int r, g, b;
+    if (sscanf(v, "%d , %d , %d", &r, &g, &b) == 3 && r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255) {
+        *out = 0xFF000000u | (u32)r << 16 | (u32)g << 8 | (u32)b; return 1;
+    }
+    for (size_t i = 0; i < sizeof kNamedColors / sizeof kNamedColors[0]; i++)
+        if (!_stricmp(v, kNamedColors[i].name)) { *out = 0xFF000000u | kNamedColors[i].rgb; return 1; }
+    return -1;
+}
+static void ReadColors(const char* ini)
+{
+    for (int i = 0; i < 4; i++) {
+        char v[64]; GetPrivateProfileStringA("W3MinimapTweaks", kColorKeys[i], "", v, sizeof v, ini);
+        int r = ParseRGB(v, &g_mmColor[i]);
+        if (r < 0) logf_("%s=%s: not a colour (R,G,B or a name), the game's is kept", kColorKeys[i], v);
+        if (r > 0) { g_mmSet[i] = 1; g_mmAny = 1; logf_("%s: %06X", kColorKeys[i], g_mmColor[i] & 0xFFFFFF); }
+    }
+}
+static void ApplyColors(u32 minimap)
+{
+    static const u32 ofs[4][2] = { { 0x7BC, 0 }, { 0x7C0, 0 }, { 0x7C4, 0 }, { 0x7D8, 0x7DC } };
+    for (int i = 0; i < 4; i++) if (g_mmSet[i])
+        for (int k = 0; k < 2 && ofs[i][k]; k++) *(u32*)(minimap + ofs[i][k]) = g_mmColor[i];
+}
+
 // ---- unit dots. The minimap is a 256x256 bitmap (terrain, then the units drawn into it) stretched over the minimap
 //      area; every unit is a square of 4x4 texels, a building 8x8. On a big screen one texel is several pixels, so
 //      groups of units melt into one blob. The game's fill of that square is replaced: same centre, own sizes. ----
@@ -93,6 +134,7 @@ __attribute__((used, fastcall)) void DrawDot(u32 minimap, u32 rowcol, u32 color,
     if (y0 > 256 - n) y0 = 256 - n;
     if (x0 < 0) x0 = 0;
     if (x0 > 256 - n) x0 = 256 - n;
+    if (g_mmAny) ApplyColors(minimap);
     u32* px = *(u32**)(minimap + 0x1d8);
     if (!px) return;
     for (int y = 0; y < n; y++) {
@@ -127,7 +169,7 @@ static void __attribute__((naked)) Dot127(void)
 }
 static void InstallDots(void)
 {
-    if (g_dotUnit == 4 && g_dotBuilding == 8) { logf_("unit dots: the game's own sizes"); return; }
+    if (g_dotUnit == 4 && g_dotBuilding == 8 && !g_mmAny) { logf_("unit dots: the game's own sizes"); return; }
     u32 at = g_base + A->dotAt;
     if (memcmp((void*)at, A->dotCode, 6)) { logf_("unit dots: code not recognised, left as is"); return; }
     g_dotDone = g_base + A->dotDone;
@@ -155,6 +197,7 @@ static void Install(void)
     GetModuleFileNameA(NULL, dir, MAX_PATH);
     char* sl = strrchr(dir, '\\'); if (sl) *(sl + 1) = 0;
     snprintf(path, sizeof path, "%sW3MinimapTweaks.ini", dir);
+    char path0[MAX_PATH]; strcpy(path0, path);
     int ally = GetPrivateProfileIntA("W3MinimapTweaks", "CampaignAllyColors", 1, path);
     g_dotUnit = GetPrivateProfileIntA("W3MinimapTweaks", "UnitDotSize", 0, path);
     g_dotBuilding = GetPrivateProfileIntA("W3MinimapTweaks", "BuildingDotSize", 0, path);
@@ -173,10 +216,11 @@ static void Install(void)
 
     g_base = (u32)GetModuleHandleA("Game.dll");
     u32 build = GetGameBuild();
-    logf_("W3MinimapTweaks 1.1  Game.dll build %u", build);
+    logf_("W3MinimapTweaks 1.2  Game.dll build %u", build);
     for (size_t i = 0; i < sizeof kAddrs / sizeof kAddrs[0]; i++) if (kAddrs[i].build == build) A = &kAddrs[i];
     if (!g_base || !A) { logf_("unsupported game version, doing nothing (need 1.26a / 6401 or 1.27b / 7085)"); return; }
     if (ally) KeepEnabled(A->allyPush, "ally color button");
+    ReadColors(path0);
     InstallDots();
 }
 
