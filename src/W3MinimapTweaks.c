@@ -1,4 +1,4 @@
-// W3MinimapTweaks.mix - minimap tweaks for Warcraft III 1.26a and 1.27b (Game.dll builds 6401 and 7085)
+// W3MinimapTweaks.mix - minimap tweaks for Warcraft III 1.26a, 1.27b and 1.28.5 (Game.dll builds 6401, 7085, 7680)
 // Copyright (c) 2026 Hr0ffT - MIT License - https://github.com/Hr0ffT
 //
 // - Ally Color Mode (Alt+A) usable in campaign missions.
@@ -33,6 +33,7 @@ typedef struct {
 static const Addrs kAddrs[] = {
     { 6401, 0x39F0E4, 0x602FE0, 0x361A8C, 0x361C89, "\x8b\x97\xd8\x01\x00\x00" },   // 1.26a
     { 7085, 0x1E99F6, 0x10F240, 0x3DB57A, 0x3DB6CD, "\x8b\x83\xd8\x01\x00\x00" },   // 1.27b
+    { 7680, 0x21C1F6, 0x13D770, 0x40F68A, 0x40F7DD, "\x8b\x83\xd8\x01\x00\x00" },   // 1.28.5 (the same code as 1.27b)
 };
 static const Addrs* A;
 
@@ -155,7 +156,7 @@ static void __attribute__((naked)) Dot126(void)
         "popal\n"
         "jmp *_g_dotDone\n" ::: "memory");
 }
-// 1.27: minimap in ebx, row in ecx, column in edx, colour in esi, building flag at [ebp-34h]
+// 1.27 and 1.28.5: minimap in ebx, row in ecx, column in edx, colour in esi, building flag at [ebp-34h]
 static void __attribute__((naked)) Dot127(void)
 {
     asm volatile(
@@ -216,9 +217,9 @@ static void Install(void)
 
     g_base = (u32)GetModuleHandleA("Game.dll");
     u32 build = GetGameBuild();
-    logf_("W3MinimapTweaks 1.2  Game.dll build %u", build);
+    logf_("W3MinimapTweaks 1.3  Game.dll build %u", build);
     for (size_t i = 0; i < sizeof kAddrs / sizeof kAddrs[0]; i++) if (kAddrs[i].build == build) A = &kAddrs[i];
-    if (!g_base || !A) { logf_("unsupported game version, doing nothing (need 1.26a / 6401 or 1.27b / 7085)"); return; }
+    if (!g_base || !A) { logf_("unsupported game version, doing nothing (need 1.26a / 6401, 1.27b / 7085 or 1.28.5 / 7680)"); return; }
     if (ally) KeepEnabled(A->allyPush, "ally color button");
     ReadColors(path0);
     InstallDots();

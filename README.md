@@ -1,6 +1,6 @@
 # W3MinimapTweaks
 
-Minimap tweaks for **Warcraft III 1.26a and 1.27b**.
+Minimap tweaks for **Warcraft III 1.26a, 1.27b and 1.28.5**.
 
 [Русская версия](README.ru.md)
 
@@ -12,7 +12,7 @@ Everything happens in memory while the game runs. No game files are modified.
 
 ## Requirements
 
-- Warcraft III 1.26a (Game.dll 1.26.0.6401) or 1.27b (Game.dll 1.27.1.7085). The mod checks the version and does nothing on any other patch.
+- Warcraft III 1.26a (Game.dll 1.26.0.6401), 1.27b (Game.dll 1.27.1.7085) or 1.28.5 (Game.dll 1.28.5.7680). The mod checks the version and does nothing on any other patch.
 
 ## Installation
 
@@ -45,6 +45,7 @@ All in `W3MinimapTweaks.ini`:
 
 ## Changelog
 
+- **1.3** — Works on 1.28.5 too.
 - **1.2** — Own minimap colours for Ally Color Mode (`MinimapYouColor`, `MinimapAllyColor`, `MinimapEnemyColor`, `MinimapCreepColor`).
 - **1.1** — Smaller unit dots on the minimap (`UnitDotSize`, `BuildingDotSize`), automatic for the screen height.
 - **1.0** — First release.
