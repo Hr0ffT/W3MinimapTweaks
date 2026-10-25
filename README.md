@@ -2,8 +2,6 @@
 
 Minimap tweaks for **Warcraft III 1.26a, 1.27b and 1.28.5**.
 
-[Русская версия](README.ru.md)
-
 - **Ally Color Mode in campaign missions.** The button next to the minimap (or **Alt+A**) switches the colours to "you, allies, enemies", first on the minimap (you white, allies teal, enemies red), then on the units too (you blue, allies teal, enemies red). It works in every game except campaign missions, where the game greys it out. With this mod it works there as well.
 - **Own Ally Color Mode colours on the minimap.** In that mode the minimap shows you white, allies teal, enemies red. Any of them can be set to another colour (R,G,B or a name), for example to see enemies better on the terrain. Only the minimap: the units keep their team colours.
 - **Smaller unit dots.** The minimap is a 256x256 picture stretched over the minimap area; every unit is a 4x4 square in it, a building 8x8. On a big screen one point of that picture is several pixels, so groups of units melt into one blob. The mod draws the dots smaller, at the same place: by default as big on screen as the game's dots are at 1080p (4K: 2 and 4, 1440p: 3 and 6; on 1080p nothing changes). Heroes keep their own icon.
